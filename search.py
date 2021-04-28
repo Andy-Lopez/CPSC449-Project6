@@ -9,7 +9,10 @@ stopWords = ["the", "be", "to", "of", "and", "a", "in", "that", "have", "i", "it
                 "her", "she", "or", "an", "will", "my", "one", "all", "would", "there", "their", "what", "so",
                 "up", "out", "if", "about", "get", "which", "go", "me"]
 
+r = redis.StrictRedis(host='localhost',port=6379,db=0)
 
+#Endpoint to add text to the index
+#curl -d '{"message":"brandon", "index":6}' -H 'Content-Type: application/json' http://localhost:8080/index
 
 @post('/index')
 def addIndex():
@@ -18,11 +21,56 @@ def addIndex():
     messageIndex = message['index']
     for word in messageNew:
         addKeyword(word, messageIndex)
-        
+
     response.body = "Successfully inserted."
     response.status = 201
     return response
 
+
+#Endpoint to get postids that contain any of the keywords
+#curl -d '{"keywords":["hello", "brandon"]}' -H 'Content-Type: application/json' -X GET http://localhost:8080/index/any
+
+@get('/index/any')
+def getAny():
+    myIndex = []
+    message = request.json
+    for mes in message['keywords']:
+        try:
+            index = json.loads(r.get(mes))
+            print(index)
+            for i in index:
+                if i not in myIndex:
+                    myIndex.append(i)
+        except:
+            print(mes + " is not in the db.")
+
+    return json.dumps(myIndex)
+
+#Endpoint to get postid that contains all the keywords
+# curl -d '{"keywords":["hello", "world"]}' -H 'Content-Type: application/json' -X GET http://localhost:8080/index/all 
+
+@get('/index/all')
+def getAll():
+    message = request.json
+    myIndex = []
+    empty = True
+    for mes in message['keywords']:
+        try:
+            index = json.loads(r.get(mes))
+            print(index)
+            if(empty):
+                myIndex = index
+                empty = False
+            else:
+                myIndex = list(set(myIndex) & set(index))
+        except: 
+            print("Nope!")
+        
+    response.body = json.dumps(myIndex)
+    response.status = 200
+    return response
+
+    
 #Method to perform preprocessing.
 def convert(text):
     text = re.sub("[!\"#$%&'()*+, -./:;<=>?@[\]^_`{|}~]", " ", text)
@@ -36,18 +84,16 @@ def convert(text):
     return myWords
     
 
-r = redis.StrictRedis(host='localhost',port=6379,db=0)
+
 
 #Method to insert keyword and index
 def insertKeyword(word,index):
     myList = [index]
     try:
         r.set(word, json.dumps(myList))
-        #msg = r.get(word)
     except:
-        #we will update with the new index
-        #updateKeyword()
         print("Error!")
+    return 
     
 #Method to add keyword and index
 #If the keyword does not exist create it
@@ -65,12 +111,15 @@ def addKeyword(word, index):
         print("Does not exist. Inserting now.")
         insertKeyword(word, index)
 
+    return 
 
     
 
 def deleteAll():
     r = redis.Redis(host="localhost", db=0)
     r.flushdb()
+
+    return
 
 
 
