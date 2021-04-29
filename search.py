@@ -20,6 +20,7 @@ def addIndex():
     messageNew = convert(message['message'])
     messageIndex = message['index']
     for word in messageNew:
+        #add keyword checks to see if it already exist
         addKeyword(word, messageIndex)
 
     response.body = "Successfully inserted."
@@ -43,6 +44,9 @@ def getAny():
                     myIndex.append(i)
         except:
             print(mes + " is not in the db.")
+            #response.status = 400
+            #response.body = "Something went wrong..."
+            #RETURN ERROR
 
     return json.dumps(myIndex)
 
@@ -64,6 +68,9 @@ def getAll():
                 myIndex = list(set(myIndex) & set(index))
         except: 
             print("Nope!")
+            #response.status = 400
+            #response.body = "Something went wrong..."
+            #RETURN ERROR
         
     response.body = json.dumps(myIndex)
     response.status = 200
@@ -85,6 +92,7 @@ def getExclude():
                     include.append(i)
         except:
             print("Error")
+            #RETURN ERROR
 
     for mes in message['exclude']:
         try:
@@ -94,6 +102,7 @@ def getExclude():
                     exclude.append(i)
         except:
             print("Error") 
+            #RETURN ERROR
 
     response.body = json.dumps(list(set(include) - set(exclude)))
     return response
@@ -126,7 +135,6 @@ def insertKeyword(word,index):
 #Method to add keyword and index
 #If the keyword does not exist create it
 def addKeyword(word, index):
-    #print(r.get('Hello'))
     try:
         msg = r.get(word)
         newList = json.loads(msg)
@@ -134,7 +142,6 @@ def addKeyword(word, index):
         if index not in newList:
             newList.append(index)
             r.set(word, json.dumps(newList))
-        
     except:
         print("Does not exist. Inserting now.")
         insertKeyword(word, index)
