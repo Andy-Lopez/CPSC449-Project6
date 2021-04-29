@@ -57,7 +57,6 @@ def getAll():
     for mes in message['keywords']:
         try:
             index = json.loads(r.get(mes))
-            print(index)
             if(empty):
                 myIndex = index
                 empty = False
@@ -70,7 +69,36 @@ def getAll():
     response.status = 200
     return response
 
-    
+
+#curl -d '{"include":["hello", "brandon"], "exclude":[]}' -H 'Content-Type: application/json' -X GET http://localhost:8080/index/exclude
+@get('/index/exclude')
+def getExclude():
+    message = request.json
+    include = []
+    exclude = []
+
+    for mes in message['include']:
+        try:
+            index = json.loads(r.get(mes))
+            for i in index:
+                if i not in include:
+                    include.append(i)
+        except:
+            print("Error")
+
+    for mes in message['exclude']:
+        try:
+            index = json.loads(r.get(mes))
+            for i in index:
+                if i not in exclude:
+                    exclude.append(i)
+        except:
+            print("Error") 
+
+    response.body = json.dumps(list(set(include) - set(exclude)))
+    return response
+
+
 #Method to perform preprocessing.
 def convert(text):
     text = re.sub("[!\"#$%&'()*+, -./:;<=>?@[\]^_`{|}~]", " ", text)
