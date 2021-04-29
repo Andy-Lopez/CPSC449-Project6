@@ -20,6 +20,7 @@ def addIndex():
     messageNew = convert(message['message'])
     messageIndex = message['index']
     for word in messageNew:
+        #add keyword checks to see if it already exist
         addKeyword(word, messageIndex)
 
     response.body = "Successfully inserted."
@@ -43,6 +44,28 @@ def getAny():
                     myIndex.append(i)
         except:
             print(mes + " is not in the db.")
+            #response.status = 400
+            #response.body = "Something went wrong..."
+            #RETURN ERROR
+
+    return json.dumps(myIndex)
+
+#Endpoint to get postids that contain any of the keywords
+#curl -d '{"keywords":["hello", "brandon"]}' -H 'Content-Type: application/json' -X GET http://localhost:8080/index/any
+
+@get('/index/search/<keyword>')
+def getSpecific(keyword):
+    myIndex = []
+    try:
+        index = json.loads(r.get(keyword))
+        print(index)
+        for i in index:
+            if i not in myIndex:
+                myIndex.append(i)
+    except: 
+        response.status = 400
+        response.body = "Could not find keyword"
+        return response
 
     return json.dumps(myIndex)
 
@@ -57,7 +80,6 @@ def getAll():
     for mes in message['keywords']:
         try:
             index = json.loads(r.get(mes))
-            print(index)
             if(empty):
                 myIndex = index
                 empty = False
@@ -65,12 +87,46 @@ def getAll():
                 myIndex = list(set(myIndex) & set(index))
         except: 
             print("Nope!")
+            #response.status = 400
+            #response.body = "Something went wrong..."
+            #RETURN ERROR
         
     response.body = json.dumps(myIndex)
     response.status = 200
     return response
 
-    
+
+#curl -d '{"include":["hello", "brandon"], "exclude":[]}' -H 'Content-Type: application/json' -X GET http://localhost:8080/index/exclude
+@get('/index/exclude')
+def getExclude():
+    message = request.json
+    include = []
+    exclude = []
+
+    for mes in message['include']:
+        try:
+            index = json.loads(r.get(mes))
+            for i in index:
+                if i not in include:
+                    include.append(i)
+        except:
+            print("Error")
+            #RETURN ERROR
+
+    for mes in message['exclude']:
+        try:
+            index = json.loads(r.get(mes))
+            for i in index:
+                if i not in exclude:
+                    exclude.append(i)
+        except:
+            print("Error") 
+            #RETURN ERROR
+
+    response.body = json.dumps(list(set(include) - set(exclude)))
+    return response
+
+
 #Method to perform preprocessing.
 def convert(text):
     text = re.sub("[!\"#$%&'()*+, -./:;<=>?@[\]^_`{|}~]", " ", text)
@@ -98,7 +154,6 @@ def insertKeyword(word,index):
 #Method to add keyword and index
 #If the keyword does not exist create it
 def addKeyword(word, index):
-    #print(r.get('Hello'))
     try:
         msg = r.get(word)
         newList = json.loads(msg)
@@ -106,7 +161,6 @@ def addKeyword(word, index):
         if index not in newList:
             newList.append(index)
             r.set(word, json.dumps(newList))
-        
     except:
         print("Does not exist. Inserting now.")
         insertKeyword(word, index)
