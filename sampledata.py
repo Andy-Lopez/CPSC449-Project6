@@ -34,13 +34,13 @@ res = requests.post(url, json=payload, headers=headers)
 
 #Search for given keyword search(keyword)
 print("Search for keyword andy")
-url     = 'http://localhost:8080/index/search/andy'
+url     = 'http://localhost:8080/index/keyword/andy'
 res = requests.get(url)
 print(res.text)
 
 #Search for a keyword not found in the index and returns not found
 print("Search for a keyword not found in the index")
-url     = 'http://localhost:8080/index/search/hi'
+url     = 'http://localhost:8080/index/keyword/hi'
 res = requests.get(url)
 print(res.text)
 

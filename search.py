@@ -50,10 +50,10 @@ def getAny():
 
     return json.dumps(myIndex)
 
-#Endpoint to get postids that contain any of the keywords
-#curl -d '{"keywords":["hello", "brandon"]}' -H 'Content-Type: application/json' -X GET http://localhost:8080/index/any
+#Endpoint to get postids that contain a specific keyword
+#curl http://localhost:8080/index/keyword/andy
 
-@get('/index/search/<keyword>')
+@get('/index/keyword/<keyword>')
 def getSpecific(keyword):
     myIndex = []
     try:
