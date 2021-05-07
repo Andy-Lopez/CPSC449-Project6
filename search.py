@@ -48,6 +48,7 @@ def getAny():
             #response.body = "Something went wrong..."
             #RETURN ERROR
 
+
     return json.dumps(myIndex)
 
 #Endpoint to get postids that contain a specific keyword
@@ -66,6 +67,7 @@ def getSpecific(keyword):
         response.status = 400
         response.body = "Could not find keyword"
         return response
+
 
     return json.dumps(myIndex)
 
